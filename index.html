@@ -2945,34 +2945,6 @@ if(nameCloseX){
 }
 
    
-function saveLocalScoreWithName(name){
-  name = String(name || "").trim().slice(0,18);
-  if(!name) name = "ブーハー";
-
-  try{ localStorage.setItem("booha_blocks_name", name); }catch(e){}
-
-  const entry = {
-    name,
-    score: score || 0,
-    lines: linesClearedTotal || 0,
-    level: currentLevel || 1,
-    at: Date.now()
-  };
-
-  const board = getLocalBoard();
-  board.push(entry);
-
-  board.sort((a,b)=>
-    (b.lines - a.lines) ||
-    (b.score - a.score) ||
-    (b.at - a.at)
-  );
-
-  setLocalBoard(board.slice(0,10));
-}
-
-
-   
 function renderLocalLeaderboard(){
   if(!leaderList) return;
 
@@ -3007,31 +2979,6 @@ function renderLocalLeaderboard(){
 /* ===============================
    NAME ENTRY LOGIC
    =============================== */
-
-function openNameEntry(){
-  if(!nameOverlay) return;
-  nameOverlay.style.display = "flex";
-  if(nameInput){
-    nameInput.value = "";
-    setTimeout(()=>nameInput.focus(), 80);
-  }
-}
-
-function closeNameEntry(){
-  if(!nameOverlay) return;
-  nameOverlay.style.display = "none";
-}
-
-if(nameOkBtn){
-  nameOkBtn.onclick = ()=>{
-
-    const name = (nameInput?.value || "").trim();
-    saveLocalScore(name || "PLAYER");
-    closeNameEntry();
-    openLeaderboard();   // leaderboard comes AFTER name
-  };
-}
-
    
 function openLeaderboard(){
   if(!leaderboardOverlay) return;
@@ -3228,7 +3175,8 @@ function finalizeGameOver(){
   ctx.fillStyle = "#000";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  openNameEntry();
+  opeopenNameOverlay();
+
 }
 
 
