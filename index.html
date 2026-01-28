@@ -1110,10 +1110,6 @@ html, body {
 
     <div id="leaderList" class="lbList"></div>
 
-    <button id="lbClearBtn" class="lbClear" type="button">
-      スコアをリセット
-    </button>
-
   </div>
 </div>
 
@@ -1551,6 +1547,11 @@ let isPausedForQuestion = false;
 
 let score = 0;
 let linesClearedTotal = 0;
+let gameStartTime = 0;
+let questionsSeen = 0;
+let questionsCorrect = 0;
+let firstTryCorrect = 0;
+   
 
 let gravityFrames = 40;
 let frameCounter = 0;
@@ -1836,14 +1837,12 @@ const CLEAR_PALETTES = [
   ["#fb7185","#f472b6","#7dd3fc","#c084fc"],
   ["#06b6d4","#67e8f9","#facc15","#fb7185"],
 ];
-function pickPalette(){
-  return CLEAR_PALETTES[(Math.random()*CLEAR_PALETTES.length)|0];
-}
+
 let activeClearPalette = pickPalette();
 
 const particles = [];
 function spawnClearParticles(rows){
-  activeClearPalette = pickPalette();
+  
 
   rows.forEach(r=>{
     for(let i=0;i<44;i++){
@@ -2438,6 +2437,8 @@ function showQuestion(){
 
   if(questionOpen) return;
   questionOpen = true;
+  questionsSeen++;
+   
 
   isPausedForQuestion = true;
   firstTry = true;
@@ -2464,6 +2465,9 @@ function showQuestion(){
 
     b.addEventListener("click", ()=>{
       if(c.originalIndex === q.correctIndex){
+        questionsCorrect++;
+        if(firstTry) firstTryCorrect++;
+ 
         b.classList.add("correct");
         playSFX(AUDIO_FILES.quizCorrect, 0.95);
 
@@ -2503,7 +2507,7 @@ const LB_KEY = "booha_blocks_lb_v1";
 const leaderboardOverlay = document.getElementById("leaderboardOverlay");
 const leaderClose = document.getElementById("leaderClose");
 const leaderList = document.getElementById("leaderList");
-const lbClearBtn = document.getElementById("lbClearBtn");
+
 
 function getLocalBoard(){
   try{
@@ -2531,9 +2535,16 @@ function saveLocalScore(){
   const name = promptName();
   const entry = {
     name,
-    score: score || 0,
-    lines: linesClearedTotal || 0,
-    level: currentLevel || 1,
+    score,
+    lines: linesClearedTotal,
+    level: currentLevel,
+    timeMs: Date.now() - gameStartTime,
+    questionsSeen,
+    questionsCorrect,
+    firstTryCorrect,
+    accuracy: questionsSeen
+      ? Math.round((questionsCorrect / questionsSeen) * 100)
+      : 0,
     at: Date.now()
   };
 
@@ -2541,13 +2552,14 @@ function saveLocalScore(){
   board.push(entry);
 
   board.sort((a,b)=>
-    (b.score - a.score) ||
     (b.lines - a.lines) ||
+    (b.score - a.score) ||
     (b.at - a.at)
   );
 
   setLocalBoard(board.slice(0,10));
 }
+
 
 function renderLocalLeaderboard(){
   if(!leaderList) return;
@@ -2598,12 +2610,6 @@ if(leaderboardOverlay){
   leaderboardOverlay.addEventListener("click",(e)=>{
     if(e.target === leaderboardOverlay) closeLeaderboard();
   });
-}
-if(lbClearBtn){
-  lbClearBtn.onclick = ()=>{
-    try{ localStorage.removeItem(LB_KEY); }catch(e){}
-    renderLocalLeaderboard();
-  };
 }
 
 
@@ -2698,17 +2704,6 @@ if(helpOverlay){
   }, { passive:false });
 }
 
-/* ------------------------------
-   TROPHY
---------------------------------*/
-if(trophyBtn){
-  trophyBtn.addEventListener("pointerdown", (e)=>{
-    e.preventDefault();
-    e.stopPropagation();
-    if(!gameStarted) return;
-    openLeaderboard?.();
-  }, { passive:false });
-}
 
 
 /* ==============================
@@ -2745,6 +2740,8 @@ window.addEventListener("DOMContentLoaded", ()=>{
 function triggerGameOver(){
   if(isGameOver) return;
   isGameOver = true;
+  const timePlayedMs = Date.now() - gameStartTime;
+
 
   pauseBGM?.();
 
@@ -2780,6 +2777,11 @@ function hardReset(){
   isClearingLines = false;
   clearingRows = [];
   clearTicks = 0;
+ gameStartTime = 0;
+ questionsSeen = 0;
+ questionsCorrect = 0;
+ firstTryCorrect = 0;
+
 
   score = 0;
   linesClearedTotal = 0;
@@ -2809,6 +2811,8 @@ async function startGame(){
   hardReset();
 
   gameStarted = true;
+  gameStartTime = Date.now();
+ 
 
   currentLevel = calcLevel?.() ?? currentLevel;
   const t = LEVEL_THEMES[(currentLevel - 1) % LEVEL_THEMES.length];
