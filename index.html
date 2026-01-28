@@ -1676,6 +1676,11 @@ let isGameOver = false;
 let isPaused = false;
 let isPausedForQuestion = false;
 
+let isEndingSequence = false;
+let endingFlashTimer = 0;
+let endingFlashDuration = 240; // ~4 seconds at 60fps
+   
+
 let score = 0;
 let linesClearedTotal = 0;
 let gameStartTime = 0;
@@ -2294,7 +2299,45 @@ function draw(){
 }
 
 function loop(){
+
+  // --------------------
+  // ENDING SEQUENCE (flash + fade)
+  // --------------------
+  if(isEndingSequence){
+    endingFlashTimer--;
+
+    draw();
+
+    // BIG WTF FLASH
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.fillStyle = `rgba(255,255,255,${0.6 + 0.4*Math.sin(endingFlashTimer*0.35)})`;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.restore();
+
+    // fade to black near the end
+    if(endingFlashTimer < 60){
+      ctx.save();
+      ctx.globalAlpha = 1 - (endingFlashTimer / 60);
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.restore();
+    }
+
+    if(endingFlashTimer <= 0){
+      finalizeGameOver();
+      return;
+    }
+
+    requestAnimationFrame(loop);
+    return;
+  }
+
+  // --------------------
+  // NORMAL LOOP GUARD
+  // --------------------
   if(isGameOver || isPaused || isPausedForQuestion || !gameStarted) return;
+
 
   tickGlow();
 
@@ -3063,25 +3106,36 @@ window.addEventListener("DOMContentLoaded", ()=>{
 /* ------------------------------
    GAME OVER
 --------------------------------*/
-async function triggerGameOver(){
-  if(isGameOver) return;
+function triggerGameOver(){
+  if(isGameOver || isEndingSequence) return;
+
+  isEndingSequence = true;
+  endingFlashTimer = endingFlashDuration;
+
+  // stop all normal music immediately
+  stopDangerMusic?.();
+  pauseBGM?.();
+
+  // play game over sound ONCE
+  try{
+    SFX.gameOver.currentTime = 0;
+    SFX.gameOver.play();
+  }catch(_){}
+
+  // lock inputs but KEEP drawing
+  isPaused = true;
+}
+
+function finalizeGameOver(){
+  isEndingSequence = false;
   isGameOver = true;
-  gameStarted = false;
 
-  // stop everything
-  stopAllMusic();
+  // hard stop visuals
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  // disable inputs immediately
-  const shellEl = document.querySelector(".shell");
-  if(shellEl) shellEl.style.pointerEvents = "none";
-  if(canvas)  canvas.style.pointerEvents = "none";
-
-  // 4 seconds of flashy panic + play game-over sound ONCE
-  try{ playSFX(AUDIO_FILES.gameOver, 0.95); }catch(_){}
-  await flashAndBlackout(4000);
-
-  // black screen + ask name (JP)
-  openNameOverlay();
+  // NOW we move on (name screen comes next step)
+  openNameEntry?.(); // (will exist in Step 4)
 }
 
 
