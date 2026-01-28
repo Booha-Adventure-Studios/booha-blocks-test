@@ -1837,6 +1837,9 @@ const CLEAR_PALETTES = [
   ["#fb7185","#f472b6","#7dd3fc","#c084fc"],
   ["#06b6d4","#67e8f9","#facc15","#fb7185"],
 ];
+function pickPalette(){
+  return CLEAR_PALETTES[(Math.random()*CLEAR_PALETTES.length)|0];
+}
 
 let activeClearPalette = pickPalette();
 
@@ -2505,7 +2508,8 @@ function showQuestion(){
 const LB_KEY = "booha_blocks_lb_v1";
 
 const leaderboardOverlay = document.getElementById("leaderboardOverlay");
-const leaderClose = document.getElementById("leaderClose");
+const leaderClose = document.getElementById("lbClose");
+
 const leaderList = document.getElementById("leaderList");
 
 
@@ -2864,23 +2868,6 @@ function startFromOverlay(){
   }, 650);
 }
 
-/* ---------- start overlay input (NO load handler, NO globals) ---------- */
-function onStartOverlayTap(e){
-  e.preventDefault();
-  e.stopPropagation();
-  startFromOverlay();
-}
-
-if(startOverlay){
-  startOverlay.addEventListener("touchstart", onStartOverlayTap, { passive:false });
-  startOverlay.addEventListener("pointerdown", onStartOverlayTap, { passive:false });
-}
-
-/* Optional external triggers */
-window.booha = window.booha || {};
-window.booha.startFromOverlay = startFromOverlay;
-window.booha.triggerGameOver  = triggerGameOver;
-window.addEventListener("booha:start", startFromOverlay);
 
 /* Optional: allow other scripts to trigger start via event */
 window.booha = window.booha || {};
@@ -2888,33 +2875,7 @@ window.booha.startFromOverlay = startFromOverlay;
 window.booha.triggerGameOver  = triggerGameOver;
 window.addEventListener("booha:start", startFromOverlay);
 
-window.addEventListener("load", ()=>{
-  const so = document.getElementById("startOverlay");
-  if(!so){
-    console.log("NO startOverlay FOUND");
-    return;
-  }
-  console.log("startOverlay FOUND — attaching handler");
 
-
-function bindStartOverlay(){
-  if(!so) return;
-
-  so.addEventListener("pointerdown", (e)=>{
-    e.preventDefault();
-    e.stopPropagation();
-    startFromOverlay();
-  }, { passive:false });
-}
-
-bindStartOverlay();
-
-updateGravity();
-updateHud();
-draw();
-
-
-});
 </script>
 </body>
 </html>
