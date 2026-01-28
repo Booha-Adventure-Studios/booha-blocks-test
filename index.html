@@ -556,17 +556,6 @@ body, .shell, canvas,
     box-shadow:0 0 8px rgba(255,255,255,0.7);
   }
 
-  /* ===============================
-     NAME ENTRY OVERLAY
-     =============================== */
-<div id="nameOverlay" class="overlay" style="display:none;">
-  <div class="nameBox">
-    <div class="nameTitle">なまえをいれてね</div>
-    <input id="nameInput" type="text" maxlength="18" placeholder="なまえ" />
-    <button id="nameSubmit">OK</button>
-  </div>
-</div>
-
      
   /* ✅ ONE LEADERBOARD OVERLAY (LOCAL) */
   #leaderboardOverlay{
@@ -581,27 +570,6 @@ body, .shell, canvas,
     padding:calc(14px + env(safe-area-inset-top,0px)) 14px calc(14px + env(safe-area-inset-bottom,0px));
   }
 
-<!-- ✅ NAME ENTRY OVERLAY (GAME OVER) -->
-<div id="nameOverlay" style="display:none;">
-  <div class="nameCard">
-    <button id="nameCloseX" class="nameX" type="button" aria-label="Close">✕</button>
-
-    <div class="nameTitle">ゲームオーバー</div>
-    <div class="nameSub">なまえ を いれてね</div>
-
-    <input id="nameInput" class="nameInput"
-      type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false"
-      placeholder="（れい）ブライアン"
-      maxlength="18"
-    />
-
-    <div class="nameBtns">
-      <button id="nameOkBtn" class="nameOk" type="button">OK</button>
-    </div>
-
-    <div class="nameHint">※ えいごでもOK ／ 18文字まで</div>
-  </div>
-</div>
 
 /* ✅ GAME OVER BLACKOUT + NAME OVERLAY */
 #nameOverlay{
@@ -1259,14 +1227,34 @@ html, body {
   100%{opacity:1;}
 }
 
-     
-     
+         
 </style>
    
 <body>
 
 <div class="shell">
+<div id="nameOverlay" style="display:none;">
+  <div class="nameCard">
+    <button id="nameCloseX" class="nameX" type="button" aria-label="Close">✕</button>
 
+    <div class="nameTitle">ゲームオーバー</div>
+    <div class="nameSub">なまえ を いれてね</div>
+
+    <input id="nameInput" class="nameInput"
+      type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false"
+      placeholder="（れい）ブライアン"
+      maxlength="18"
+    />
+
+    <div class="nameBtns">
+      <button id="nameOkBtn" class="nameOk" type="button">OK</button>
+    </div>
+
+    <div class="nameHint">※ えいごでもOK ／ 18文字まで</div>
+  </div>
+</div>
+
+  
     <!-- ✅ ONE LEADERBOARD OVERLAY (LOCAL) -->
 <div id="leaderboardOverlay">
   <div id="leaderboardCard">
