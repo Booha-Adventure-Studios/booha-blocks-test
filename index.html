@@ -2524,31 +2524,27 @@ function setLocalBoard(arr){
   try{ localStorage.setItem(LB_KEY, JSON.stringify(arr)); }catch(e){}
 }
 
-function promptName(){
-  let name = "";
-  try{
-    name = prompt("NAME?（名前）", (localStorage.getItem("booha_blocks_name") || "")) || "";
-  }catch(e){}
-  name = String(name).trim().slice(0, 18);
-  if(!name) name = "PLAYER";
-  try{ localStorage.setItem("booha_blocks_name", name); }catch(e){}
-  return name;
-}
 
-function saveLocalScore(){
-  const name = promptName();
+
+
+function saveLocalScore(name){
+  name = String(name || "PLAYER").trim().slice(0, 18);
+  if(!name) name = "PLAYER";
+
   const entry = {
     name,
-    score,
-    lines: linesClearedTotal,
-    level: currentLevel,
-    timeMs: Date.now() - gameStartTime,
-    questionsSeen,
-    questionsCorrect,
-    firstTryCorrect,
-    accuracy: questionsSeen
+    score: score || 0,
+    lines: linesClearedTotal || 0,
+    level: currentLevel || 1,
+
+    timeMs: (typeof gameStartTime === "number") ? (Date.now() - gameStartTime) : 0,
+    questionsSeen: (typeof questionsSeen === "number") ? questionsSeen : 0,
+    questionsCorrect: (typeof questionsCorrect === "number") ? questionsCorrect : 0,
+    firstTryCorrect: (typeof firstTryCorrect === "number") ? firstTryCorrect : 0,
+    accuracy: (typeof questionsSeen === "number" && questionsSeen > 0)
       ? Math.round((questionsCorrect / questionsSeen) * 100)
       : 0,
+
     at: Date.now()
   };
 
@@ -2563,8 +2559,9 @@ function saveLocalScore(){
 
   setLocalBoard(board.slice(0,10));
 }
+   
 
-
+   
 function renderLocalLeaderboard(){
   if(!leaderList) return;
 
@@ -2629,6 +2626,20 @@ const helpOverlay   = document.getElementById("helpOverlay");
 const helpClose     = document.getElementById("helpClose");
 
 const trophyBtn     = document.getElementById("trophyBtn");
+
+/* ------------------------------
+   TROPHY
+--------------------------------*/
+if(trophyBtn){
+  trophyBtn.addEventListener("pointerdown", (e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    if(isPausedForQuestion) return;   // ✅ don't interrupt quiz
+    openLeaderboard();
+  }, { passive:false });
+}
+
+   
 
 /* ------------------------------
    PAUSE
