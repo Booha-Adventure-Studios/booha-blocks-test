@@ -582,6 +582,137 @@ body, .shell, canvas,
     padding:calc(14px + env(safe-area-inset-top,0px)) 14px calc(14px + env(safe-area-inset-bottom,0px));
   }
 
+<!-- ✅ NAME ENTRY OVERLAY (GAME OVER) -->
+<div id="nameOverlay" style="display:none;">
+  <div class="nameCard">
+    <button id="nameCloseX" class="nameX" type="button" aria-label="Close">✕</button>
+
+    <div class="nameTitle">ゲームオーバー</div>
+    <div class="nameSub">なまえ を いれてね</div>
+
+    <input id="nameInput" class="nameInput"
+      type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false"
+      placeholder="（れい）ブライアン"
+      maxlength="18"
+    />
+
+    <div class="nameBtns">
+      <button id="nameOkBtn" class="nameOk" type="button">OK</button>
+    </div>
+
+    <div class="nameHint">※ えいごでもOK ／ 18文字まで</div>
+  </div>
+</div>
+
+/* ✅ GAME OVER BLACKOUT + NAME OVERLAY */
+#nameOverlay{
+  position:fixed;
+  inset:0;
+  z-index:10000;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.82);
+  backdrop-filter: blur(10px);
+  padding:calc(14px + env(safe-area-inset-top,0px)) 14px calc(14px + env(safe-area-inset-bottom,0px));
+}
+
+.nameCard{
+  width:min(520px,92vw);
+  border-radius:24px;
+  padding:18px 18px 16px;
+  border:1px solid rgba(255,255,255,.22);
+  background:
+    radial-gradient(circle at top, rgba(255,255,255,0.12), transparent 55%),
+    radial-gradient(circle at 20% 10%, color-mix(in srgb, var(--pink) 55%, transparent), transparent 60%),
+    radial-gradient(circle at 80% 90%, color-mix(in srgb, var(--aqua) 55%, transparent), transparent 60%),
+    radial-gradient(circle at center, #0b1020, #020617 68%, #020617 100%);
+  box-shadow:
+    0 0 26px color-mix(in srgb, var(--pink) 55%, transparent),
+    0 0 70px color-mix(in srgb, var(--aqua) 45%, transparent),
+    0 20px 80px rgba(0,0,0,.65);
+  color:#fff;
+  text-align:center;
+  position:relative;
+  animation: namePulse 1.6s ease-in-out infinite;
+}
+
+@keyframes namePulse{
+  0%,100%{ transform:scale(1); filter:brightness(1); }
+  50%{ transform:scale(1.01); filter:brightness(1.05); }
+}
+
+.nameX{
+  position:absolute;
+  top:10px; right:10px;
+  width:40px; height:40px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.26);
+  background:rgba(255,255,255,.10);
+  color:#fff;
+  font-weight:900;
+  font-size:18px;
+  box-shadow:0 0 18px rgba(255,255,255,.18);
+}
+
+.nameTitle{
+  font-family:"Cinzel", serif;
+  font-weight:900;
+  letter-spacing:.12em;
+  font-size:22px;
+  text-shadow:0 0 16px rgba(255,255,255,.25);
+  margin-top:6px;
+}
+
+.nameSub{
+  margin-top:8px;
+  font-weight:800;
+  opacity:.92;
+}
+
+.nameInput{
+  width:100%;
+  margin:14px 0 10px;
+  padding:14px 14px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.22);
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  font-size:16px; /* ✅ iOS no zoom */
+  font-weight:900;
+  outline:none;
+  text-align:center;
+  box-shadow:0 10px 24px rgba(0,0,0,.25);
+}
+
+.nameBtns{
+  display:flex;
+  gap:12px;
+  justify-content:center;
+  margin-top:6px;
+}
+
+.nameOk{
+  width:min(240px, 70vw);
+  padding:12px 16px;
+  border-radius:999px;
+  font-weight:900;
+  font-size:16px;
+  border:1px solid rgba(255,255,255,.22);
+  background:linear-gradient(180deg,#fde68a,#f59e0b);
+  color:#111827;
+  box-shadow:0 10px 26px rgba(245,158,11,.45);
+}
+
+.nameHint{
+  margin-top:10px;
+  font-size:12px;
+  opacity:.85;
+}
+
+
+     
+
   #leaderboardCard{
     width:min(560px,92vw);
     max-height:80vh;
@@ -1672,6 +1803,27 @@ async function unlockAudioOnce(){
   SFX.bgm.volume = prevVol;
 }
 
+function stopAllMusic(){
+  try{ pauseBGM?.(); }catch(_){}
+  try{ stopDangerMusic?.(); }catch(_){}
+}
+
+function flashAndBlackout(ms=4000){
+  // uses your existing CSS vars via tickGlow()
+  return new Promise((resolve)=>{
+    const root = document.documentElement;
+
+    // big flashy glow
+    root.style.setProperty("--flash", "2.0");
+    root.style.setProperty("--pulse", "2.0");
+    root.style.setProperty("--screenGlow", "2.2");
+
+    // hard black overlay using the nameOverlay background (we show it after flash)
+    setTimeout(()=>resolve(), ms);
+  });
+}
+
+   
 function pauseBGM(){
   try{ SFX.bgm.pause(); }catch(_){}
 }
@@ -2589,27 +2741,57 @@ function setLocalBoard(arr){
   try{ localStorage.setItem(LB_KEY, JSON.stringify(arr)); }catch(e){}
 }
 
+/* ==============================
+   NAME + SAVE SCORE (NO prompt)
+   ============================== */
+const nameOverlay = document.getElementById("nameOverlay");
+const nameInput   = document.getElementById("nameInput");
+const nameOkBtn   = document.getElementById("nameOkBtn");
+const nameCloseX  = document.getElementById("nameCloseX");
 
+function getSavedName(){
+  try{ return (localStorage.getItem("booha_blocks_name") || "").trim(); }catch(e){ return ""; }
+}
+function setSavedName(v){
+  try{ localStorage.setItem("booha_blocks_name", v); }catch(e){}
+}
 
+let __pendingSave = false;
 
-function saveLocalScore(name){
-  name = String(name || "PLAYER").trim().slice(0, 18);
-  if(!name) name = "PLAYER";
+function openNameOverlay(){
+  if(!nameOverlay) return;
+  __pendingSave = true;
+
+  nameOverlay.style.display = "flex";
+  const prev = getSavedName();
+  if(nameInput){
+    nameInput.value = prev || "";
+    setTimeout(()=>{ try{ nameInput.focus(); }catch(_){} }, 80);
+  }
+}
+
+function closeNameOverlayToStart(){
+  if(nameOverlay) nameOverlay.style.display = "none";
+  __pendingSave = false;
+
+  // go back to start overlay
+  if(startOverlay){
+    startOverlay.style.display = "flex";
+    startOverlay.style.pointerEvents = "auto";
+  }
+}
+
+function saveLocalScoreWithName(name){
+  name = String(name || "").trim().slice(0,18);
+  if(!name) name = "ブーハー";
+
+  setSavedName(name);
 
   const entry = {
     name,
     score: score || 0,
     lines: linesClearedTotal || 0,
     level: currentLevel || 1,
-
-    timeMs: (typeof gameStartTime === "number") ? (Date.now() - gameStartTime) : 0,
-    questionsSeen: (typeof questionsSeen === "number") ? questionsSeen : 0,
-    questionsCorrect: (typeof questionsCorrect === "number") ? questionsCorrect : 0,
-    firstTryCorrect: (typeof firstTryCorrect === "number") ? firstTryCorrect : 0,
-    accuracy: (typeof questionsSeen === "number" && questionsSeen > 0)
-      ? Math.round((questionsCorrect / questionsSeen) * 100)
-      : 0,
-
     at: Date.now()
   };
 
@@ -2624,7 +2806,62 @@ function saveLocalScore(name){
 
   setLocalBoard(board.slice(0,10));
 }
+
+function confirmNameAndOpenLeaderboard(){
+  if(!__pendingSave) return;
+
+  const name = nameInput ? nameInput.value : "";
+  saveLocalScoreWithName(name);
+
+  if(nameOverlay) nameOverlay.style.display = "none";
+  __pendingSave = false;
+
+  openLeaderboard?.();
+}
+
+if(nameOkBtn){
+  nameOkBtn.addEventListener("pointerdown", (e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    confirmNameAndOpenLeaderboard();
+  }, { passive:false });
+}
+
+if(nameCloseX){
+  nameCloseX.addEventListener("pointerdown", (e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    closeNameOverlayToStart();
+  }, { passive:false });
+}
+
    
+function saveLocalScoreWithName(name){
+  name = String(name || "").trim().slice(0,18);
+  if(!name) name = "ブーハー";
+
+  try{ localStorage.setItem("booha_blocks_name", name); }catch(e){}
+
+  const entry = {
+    name,
+    score: score || 0,
+    lines: linesClearedTotal || 0,
+    level: currentLevel || 1,
+    at: Date.now()
+  };
+
+  const board = getLocalBoard();
+  board.push(entry);
+
+  board.sort((a,b)=>
+    (b.lines - a.lines) ||
+    (b.score - a.score) ||
+    (b.at - a.at)
+  );
+
+  setLocalBoard(board.slice(0,10));
+}
+
 
    
 function renderLocalLeaderboard(){
@@ -2644,17 +2881,18 @@ function renderLocalLeaderboard(){
   };
 
   leaderList.innerHTML = board.map((e,i)=>`
-    <div class="lbRow">
-      <div class="lbLeft">
-        <div class="lbRank">#${i+1}</div>
-        <div class="lbMeta"><b>${e.name}</b></div>
-        <div class="lbMeta">Score <b>${e.score}</b></div>
-        <div class="lbDim">Lines ${e.lines}</div>
-        <div class="lbDim">Lv ${e.level}</div>
-      </div>
-      <div class="lbDim">${fmt(e.at)}</div>
+  <div class="lbRow">
+    <div class="lbLeft">
+      <div class="lbRank">#${i+1}</div>
+      <div class="lbMeta"><b>${e.name}</b></div>
+      <div class="lbMeta">ライン <b>${e.lines}</b></div>
+      <div class="lbDim">スコア ${e.score}</div>
+      <div class="lbDim">Lv ${e.level}</div>
     </div>
-  `).join("");
+    <div class="lbDim">${fmt(e.at)}</div>
+  </div>
+`).join("");
+
 }
 
 function openLeaderboard(){
@@ -2664,12 +2902,20 @@ function openLeaderboard(){
   renderLocalLeaderboard();
   leaderboardOverlay.style.display = "flex";
 }
+
 function closeLeaderboard(){
   if(!leaderboardOverlay) return;
   leaderboardOverlay.style.display = "none";
   isPaused = false;
-  resumeLoop();
+
+  // go back to start overlay (not resume game)
+  if(startOverlay){
+    startOverlay.style.display = "flex";
+    startOverlay.style.pointerEvents = "auto";
+  }
 }
+
+   
 
 if(leaderClose) leaderClose.onclick = closeLeaderboard;
 if(leaderboardOverlay){
@@ -2817,32 +3063,25 @@ window.addEventListener("DOMContentLoaded", ()=>{
 /* ------------------------------
    GAME OVER
 --------------------------------*/
-function triggerGameOver(){
+async function triggerGameOver(){
   if(isGameOver) return;
   isGameOver = true;
-  const timePlayedMs = Date.now() - gameStartTime;
+  gameStarted = false;
 
+  // stop everything
+  stopAllMusic();
 
-  pauseBGM?.();
-
-  saveLocalScore?.();
-  openLeaderboard?.();
-
-  if(startOverlay){
-    startOverlay.style.display = "flex";
-    startOverlay.style.pointerEvents = "auto";   // ✅ overlay can receive taps
-  }
-
-  if(startInner){
-    startInner.innerHTML = `<span class="big">GAME OVER</span><br>タップしてリスタート`;
-  }
-
-  // block game input while overlay is up
+  // disable inputs immediately
   const shellEl = document.querySelector(".shell");
   if(shellEl) shellEl.style.pointerEvents = "none";
   if(canvas)  canvas.style.pointerEvents = "none";
 
-  gameStarted = false;
+  // 4 seconds of flashy panic + play game-over sound ONCE
+  try{ playSFX(AUDIO_FILES.gameOver, 0.95); }catch(_){}
+  await flashAndBlackout(4000);
+
+  // black screen + ask name (JP)
+  openNameOverlay();
 }
 
 
