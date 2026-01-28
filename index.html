@@ -165,58 +165,76 @@ body, .shell, canvas,
 }
 
 
-  /* whole-screen bloom */
-  body::before{
-    content:"";
-    position:fixed;
-    inset:-6%;
-    pointer-events:none;
-    z-index:4;
-    opacity:calc(0.14 * var(--screenGlow));
-    background:
-      radial-gradient(circle at 50% 45%,
-        rgba(255,255,255,0.95) 0%,
-        rgba(255,255,255,0.0) 58%),
-      radial-gradient(circle at 20% 25%,
-        color-mix(in srgb, var(--pink) 60%, transparent) 0%,
-        transparent 60%),
-      radial-gradient(circle at 80% 75%,
-        color-mix(in srgb, var(--aqua) 60%, transparent) 0%,
-        transparent 62%);
-    filter:blur(22px);
-    mix-blend-mode:screen;
-    transition:opacity .08s ease;
-  }
+ /* =========================================
+   WHOLE-SCREEN COLOR HIT + FLASH ENGINE
+   ========================================= */
 
-  /* whole-screen flash */
-  body::after{
-    content:"";
-    position:fixed;
-    inset:0;
-    pointer-events:none;
-    z-index:5;
-    opacity:calc(0.18 * var(--flash));
-    background:
-      radial-gradient(circle at 30% 30%,
-        color-mix(in srgb, var(--pink) 60%, transparent) 0%,
-        transparent 55%),
-      radial-gradient(circle at 70% 70%,
-        color-mix(in srgb, var(--aqua) 60%, transparent) 0%,
-        transparent 60%),
-      radial-gradient(circle at 50% 50%,
-        rgba(255,255,255,0.20) 0%,
-        transparent 62%);
-    filter:blur(14px);
-    mix-blend-mode:screen;
-    transition:opacity .10s ease;
-  }
+/* COLOR BLOOM (persistent, reactive) */
+body::before{
+  content:"";
+  position:fixed;
+  inset:-12%;
+  pointer-events:none;
+  z-index:4;
+
+  opacity:calc(0.22 * var(--screenGlow));
+
+  background:
+    radial-gradient(circle at 50% 40%,
+      color-mix(in srgb, var(--pink) 85%, white) 0%,
+      transparent 55%),
+    radial-gradient(circle at 20% 80%,
+      color-mix(in srgb, var(--aqua) 85%, white) 0%,
+      transparent 60%),
+    radial-gradient(circle at 80% 20%,
+      color-mix(in srgb, var(--pink) 70%, var(--aqua)) 0%,
+      transparent 65%);
+
+  filter:blur(34px) saturate(140%);
+  mix-blend-mode:screen;
+  transition:opacity .06s linear;
+}
+
+/* FLASH HIT (short, violent, epic on 4 lines) */
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:5;
+
+  opacity:calc(0.35 * var(--flash));
+
+  background:
+    radial-gradient(circle at 50% 50%,
+      rgba(255,255,255,0.95) 0%,
+      rgba(255,255,255,0.35) 18%,
+      transparent 45%),
+    conic-gradient(
+      from 0deg,
+      color-mix(in srgb, var(--pink) 90%, white),
+      color-mix(in srgb, var(--aqua) 90%, white),
+      color-mix(in srgb, var(--pink) 90%, white)
+    );
+
+  filter:blur(12px) saturate(160%);
+  mix-blend-mode:screen;
+  transition:opacity .04s linear;
+}
+
 
   /* PHONE SHELL */
   .shell{
     position:relative;
     padding:18px 22px 32px;
     border-radius:24px;
-    background:radial-gradient(circle at top,rgba(148,163,255,0.25),rgba(15,23,42,0.98));
+    
+     /* ⬇️ CHANGE THIS LINE ONLY */
+    background:radial-gradient(circle at top,
+    rgba(148,163,255,0.45),
+    rgba(10,12,24,0.98)
+    );
+    
     border:1px solid rgba(148,163,255,0.5);
     display:flex;
     flex-direction:column;
@@ -235,48 +253,69 @@ body, .shell, canvas,
     .shell{ padding-bottom:calc(32px + env(safe-area-inset-bottom, 0px)); }
   }
 
-  /* shell halo */
-  .shell::before{
-    content:"";
-    position:absolute;
-    inset:-2px;
-    border-radius:26px;
-    background:
-      radial-gradient(circle at 0% 0%,rgba(236,72,153,0.27),transparent 60%),
-      radial-gradient(circle at 100% 100%,rgba(56,189,248,0.24),transparent 60%);
-    z-index:-1;
-    filter:blur(10px);
-    opacity:0.9;
-    animation:orbGlow 6s ease-in-out infinite alternate;
-  }
+/* =========================================
+   CRAZY REACTIVE SHELL ENGINE
+   ========================================= */
 
-  /* reactive shell glow */
-  .shell::after{
-    content:"";
-    position:absolute;
-    inset:-6px;
-    border-radius:30px;
-    pointer-events:none;
-    z-index:-2;
-    filter:blur(14px);
-    opacity:calc(0.12 + (0.68 * var(--pulse)) + (0.35 * var(--flash)));
-    background:
-      radial-gradient(circle at 30% 25%,
-        color-mix(in srgb, var(--pink) 78%, transparent) 0%,
-        transparent 55%),
-      radial-gradient(circle at 70% 75%,
-        color-mix(in srgb, var(--aqua) 78%, transparent) 0%,
-        transparent 60%),
-      radial-gradient(circle at 50% 50%,
-        rgba(255,255,255,0.20) 0%,
-        transparent 60%);
-    transition:opacity .10s ease;
-  }
+/* BASE HALO (slow breathing color) */
+.shell::before{
+  content:"";
+  position:absolute;
+  inset:-6px;
+  border-radius:30px;
+  z-index:-1;
 
-  @keyframes orbGlow{
-    0%{transform:translate3d(-4px,-4px,0) scale(1);}
-    100%{transform:translate3d(4px,4px,0) scale(1.02);}
-  }
+  background:
+    radial-gradient(circle at 15% 20%,
+      color-mix(in srgb, var(--pink) 65%, transparent) 0%,
+      transparent 60%),
+    radial-gradient(circle at 85% 80%,
+      color-mix(in srgb, var(--aqua) 65%, transparent) 0%,
+      transparent 60%);
+
+  filter:blur(14px) saturate(140%);
+  opacity:0.55;
+  animation:shellDrift 7s ease-in-out infinite alternate;
+}
+
+/* HIT / FLASH / LINE CLEAR RESPONSE */
+.shell::after{
+  content:"";
+  position:absolute;
+  inset:-12px;
+  border-radius:36px;
+  pointer-events:none;
+  z-index:-2;
+
+  opacity:calc(
+    0.15 +
+    (0.95 * var(--pulse)) +
+    (1.25 * var(--flash))
+  );
+
+  background:
+    radial-gradient(circle at 50% 45%,
+      rgba(255,255,255,0.85) 0%,
+      transparent 42%),
+    conic-gradient(
+      from 0deg,
+      color-mix(in srgb, var(--pink) 90%, white),
+      color-mix(in srgb, var(--aqua) 90%, white),
+      color-mix(in srgb, var(--gold) 90%, white),
+      color-mix(in srgb, var(--pink) 90%, white)
+    );
+
+  filter:blur(18px) saturate(180%);
+  mix-blend-mode:screen;
+  transition:opacity .04s linear;
+}
+
+/* subtle movement so it feels alive */
+@keyframes shellDrift{
+  0%   { transform:translate3d(-6px,-4px,0) scale(1); }
+  100% { transform:translate3d(6px,4px,0) scale(1.03); }
+}
+
 
   /* scale hub down on short screens */
   @media (max-height:780px){
@@ -1972,30 +2011,67 @@ let pulse2 = 0;
 let flash = 0;
 let screenGlow = 0;
 
-function bumpGlow(lines){
-  pulse      = Math.min(1.55, pulse      + 0.26 + 0.16 * lines);
-  pulse2     = Math.min(1.20, pulse2     + 0.20 + 0.10 * lines);
-  flash      = Math.min(1.35, flash      + 0.72 + 0.16 * lines);
-  screenGlow = Math.min(1.60, screenGlow + 0.95 + 0.22 * lines);
+/* =========================================
+   LINE-CLEAR COLOR IMPACT ENGINE
+   ========================================= */
 
+function bumpGlow(lines){
+  // base hit
+  pulse      += 0.22 + 0.22 * lines;
+  pulse2     += 0.18 + 0.14 * lines;
+  flash      += 0.55 + 0.35 * lines;
+  screenGlow += 0.65 + 0.45 * lines;
+
+  // clamp (looser than before — let it breathe)
+  pulse      = Math.min(pulse, 2.2);
+  pulse2     = Math.min(pulse2, 1.6);
+  flash      = Math.min(flash, 2.4);
+  screenGlow = Math.min(screenGlow, 2.6);
+
+  /* ---------- LINE-SPECIFIC COLOR BEHAVIOR ---------- */
+
+  // 1 line — quick pop
+  if(lines === 1){
+    document.documentElement.style.setProperty("--pink", "#7dd3fc");
+    document.documentElement.style.setProperty("--aqua", "#a7f3d0");
+  }
+
+  // 2 lines — stronger contrast
+  if(lines === 2){
+    document.documentElement.style.setProperty("--pink", "#f472b6");
+    document.documentElement.style.setProperty("--aqua", "#60a5fa");
+  }
+
+  // 3 lines — spicy / electric
+  if(lines === 3){
+    document.documentElement.style.setProperty("--pink", "#a855f7");
+    document.documentElement.style.setProperty("--aqua", "#22d3ee");
+  }
+
+  // 4 lines — EPIC (gold takeover)
   if(lines === 4){
-    flash      = Math.min(2.0, flash + 0.8);
-    screenGlow = Math.min(2.2, screenGlow + 1.2);
-    pulse      = Math.min(1.9, pulse + 0.6);
+    flash      += 1.2;
+    screenGlow += 1.4;
+    pulse      += 0.9;
+
+    document.documentElement.style.setProperty("--pink", "#ffd166");
+    document.documentElement.style.setProperty("--aqua", "#facc15");
   }
 }
 
 function tickGlow(){
-  pulse *= 0.90;
-  pulse2 *= 0.965;
-  flash *= 0.78;
-  screenGlow *= 0.70;
+  // faster decay = punchier feel
+  pulse      *= 0.86;
+  pulse2     *= 0.92;
+  flash      *= 0.74;
+  screenGlow *= 0.68;
 
-  document.documentElement.style.setProperty("--pulse",  pulse.toFixed(3));
-  document.documentElement.style.setProperty("--pulse2", pulse2.toFixed(3));
-  document.documentElement.style.setProperty("--flash",  flash.toFixed(3));
+  document.documentElement.style.setProperty("--pulse",      pulse.toFixed(3));
+  document.documentElement.style.setProperty("--pulse2",     pulse2.toFixed(3));
+  document.documentElement.style.setProperty("--flash",      flash.toFixed(3));
   document.documentElement.style.setProperty("--screenGlow", screenGlow.toFixed(3));
 }
+
 
 /* HUD */
 const linesEl = document.getElementById("linesCount");
