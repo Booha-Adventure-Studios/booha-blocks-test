@@ -569,6 +569,18 @@ body, .shell, canvas,
     box-shadow:0 0 8px rgba(255,255,255,0.7);
   }
 
+  /* ===============================
+     NAME ENTRY OVERLAY
+     =============================== */
+<div id="nameOverlay" class="overlay" style="display:none;">
+  <div class="nameBox">
+    <div class="nameTitle">なまえをいれてね</div>
+    <input id="nameInput" type="text" maxlength="18" placeholder="なまえ" />
+    <button id="nameSubmit">OK</button>
+  </div>
+</div>
+
+     
   /* ✅ ONE LEADERBOARD OVERLAY (LOCAL) */
   #leaderboardOverlay{
     position:fixed;
@@ -1215,6 +1227,60 @@ html, body {
 #game{
   display: block;       /* avoids baseline/inline quirks */
   margin: 0 auto;       /* centers the 320px canvas */
+}
+/* ===============================
+   NAME ENTRY STYLES
+   =============================== */
+#nameOverlay{
+  background: radial-gradient(circle at center, #111 0%, #000 70%);
+  animation: pulseBg 2s infinite;
+}
+
+.nameBox{
+  background: linear-gradient(135deg, var(--pink), var(--aqua));
+  padding: 28px 26px;
+  border-radius: 18px;
+  box-shadow:
+    0 0 30px rgba(255,255,255,.35),
+    0 0 80px rgba(255,0,200,.35);
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  min-width:240px;
+}
+
+.nameTitle{
+  font-size:22px;
+  font-weight:900;
+  text-align:center;
+  color:#000;
+  text-shadow:0 0 10px rgba(255,255,255,.7);
+}
+
+#nameInput{
+  font-size:18px;
+  padding:10px;
+  border-radius:10px;
+  border:none;
+  text-align:center;
+  outline:none;
+}
+
+#nameSubmit{
+  font-size:18px;
+  font-weight:900;
+  padding:10px;
+  border-radius:12px;
+  border:none;
+  background:#000;
+  color:#fff;
+  box-shadow:0 0 14px rgba(255,255,255,.5);
+}
+
+@keyframes pulseBg{
+  0%{opacity:1;}
+  50%{opacity:.92;}
+  100%{opacity:1;}
 }
 
      
@@ -2938,6 +3004,37 @@ function renderLocalLeaderboard(){
 
 }
 
+/* ===============================
+   NAME ENTRY LOGIC
+   =============================== */
+const nameOverlay = document.getElementById("nameOverlay");
+const nameInput   = document.getElementById("nameInput");
+const nameSubmit  = document.getElementById("nameSubmit");
+
+function openNameEntry(){
+  if(!nameOverlay) return;
+  nameOverlay.style.display = "flex";
+  if(nameInput){
+    nameInput.value = "";
+    setTimeout(()=>nameInput.focus(), 80);
+  }
+}
+
+function closeNameEntry(){
+  if(!nameOverlay) return;
+  nameOverlay.style.display = "none";
+}
+
+if(nameSubmit){
+  nameSubmit.onclick = ()=>{
+    const name = (nameInput?.value || "").trim();
+    saveLocalScore(name || "PLAYER");
+    closeNameEntry();
+    openLeaderboard();   // leaderboard comes AFTER name
+  };
+}
+
+   
 function openLeaderboard(){
   if(!leaderboardOverlay) return;
   isPaused = true;
@@ -3130,10 +3227,12 @@ function finalizeGameOver(){
   isEndingSequence = false;
   isGameOver = true;
 
-  // hard stop visuals
   ctx.fillStyle = "#000";
   ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  openNameEntry();
 }
+
 
 
 /* ------------------------------
