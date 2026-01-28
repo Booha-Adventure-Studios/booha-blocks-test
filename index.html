@@ -677,6 +677,21 @@ body, .shell, canvas,
   opacity:.85;
 }
 
+.lbX{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.35);
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  font-weight:900;
+  font-size:20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  box-shadow:0 0 14px rgba(255,255,255,.35);
+}
 
      
 
@@ -1259,10 +1274,11 @@ html, body {
 <div id="leaderboardOverlay">
   <div id="leaderboardCard">
 
-    <div class="lbTop">
-      <div class="lbTitle">🏆 スコアボード</div>
-    <button id="lbClose" class="lbClose" type="button">とじる</button>
-    </div>
+   <div class="lbTop">
+  <div class="lbTitle">🏆 スコアボード</div>
+  <button id="lbClose" class="lbX" type="button">✕</button>
+</div>
+
 
     <!-- friendly explanation -->
     <div class="lbNote">
