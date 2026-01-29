@@ -2927,6 +2927,8 @@ function showQuestion(){
 const LB_KEY = "booha_blocks_lb_v1";
 
 const leaderboardOverlay = document.getElementById("leaderboardOverlay");
+let lbOpenedFromGame = false;
+  
 const leaderClose = document.getElementById("lbClose");
 
 const leaderList = document.getElementById("leaderList");
@@ -3075,23 +3077,44 @@ function renderLocalLeaderboard(){
    
 function openLeaderboard(){
   if(!leaderboardOverlay) return;
+
+  // ✅ remember: did we open this during an active game?
+  lbOpenedFromGame = (gameStarted && !isGameOver);
+
+  // pause game while leaderboard is open
   isPaused = true;
   pauseBGM();
   renderLocalLeaderboard();
   leaderboardOverlay.style.display = "flex";
 }
 
+
 function closeLeaderboard(){
   if(!leaderboardOverlay) return;
   leaderboardOverlay.style.display = "none";
-  isPaused = false;
 
-  // go back to start overlay (not resume game)
+  // ✅ if opened mid-game: resume the game (NO start overlay)
+  if(lbOpenedFromGame){
+    isPaused = false;
+
+    if(startOverlay){
+      startOverlay.style.display = "none";
+      startOverlay.style.pointerEvents = "none";
+    }
+
+    resumeLoop?.();
+    resumeBGM?.();
+    return;
+  }
+
+  // ✅ otherwise: behave like your original (go back to start overlay)
+  isPaused = false;
   if(startOverlay){
     startOverlay.style.display = "flex";
     startOverlay.style.pointerEvents = "auto";
   }
 }
+
 
    
 
